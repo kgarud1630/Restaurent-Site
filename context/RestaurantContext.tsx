@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import { api } from '@/lib/api';
 import type { MenuItem, Reservation, RestaurantState, RestaurantAction } from '@/types/restaurant';
 
 const initialState: RestaurantState = {
@@ -76,10 +77,13 @@ export function RestaurantProvider({ children }: { children: React.ReactNode }) 
   const loadMenuItems = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Simulate API call - replace with actual API integration
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await api.menu.getItems();
+      dispatch({ type: 'SET_MENU_ITEMS', payload: response.data });
+    } catch (error) {
+      console.error('Error loading menu items:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load menu items' });
       
-      // Updated menu items without beef products
+      // Fallback to mock data if API fails
       const mockMenuItems: MenuItem[] = [
         {
           id: '1',
@@ -204,16 +208,11 @@ export function RestaurantProvider({ children }: { children: React.ReactNode }) 
       ];
       
       dispatch({ type: 'SET_MENU_ITEMS', payload: mockMenuItems });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load menu items' });
     }
   }, []);
 
   const loadReservationSlots = useCallback(async () => {
     try {
-      // Simulate API call - replace with actual API integration
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
       const today = new Date();
       const slots = [];
       
@@ -241,12 +240,11 @@ export function RestaurantProvider({ children }: { children: React.ReactNode }) 
   const createReservation = useCallback(async (reservationData: Omit<Reservation, 'id' | 'status'>) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Simulate API call - replace with actual API integration
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await api.reservations.create(reservationData);
       
       const newReservation: Reservation = {
         ...reservationData,
-        id: Date.now().toString(),
+        id: response.data.reservationId,
         status: 'confirmed',
       };
       

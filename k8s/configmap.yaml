@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: restaurant
+data:
+  init.sql: |
+    -- Restaurant Database Schema
+    -- PostgreSQL 15 compatible
+
+    -- Enable UUID extension
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+    -- Create enum types
+    CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled');
+    CREATE TYPE reservation_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed');
+    CREATE TYPE payment_status AS ENUM ('pending', 'processing', 'completed', 'failed', 'refunded');
+
+    -- Users table
+    CREATE TABLE users (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        phone VARCHAR(20),
+        preferences JSONB DEFAULT '{}',
+        loyalty_points INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Menu categories table
+    CREATE TABLE menu_categories (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        display_order INTEGER DEFAULT 0,
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Menu items table
+    CREATE TABLE menu_items (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        category_id UUID REFERENCES menu_categories(id) ON DELETE SET NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        image_url TEXT,
+        dietary_info TEXT[],
+        allergens TEXT[],
+        preparation_time INTEGER DEFAULT 15,
+        popularity_score INTEGER DEFAULT 0,
+        available BOOLEAN DEFAULT true,
+        ingredients TEXT[],
+        nutrition_info JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Insert sample data
+    INSERT INTO menu_categories (name, description, display_order) VALUES
+    ('Appetizers', 'Start your meal with our delicious appetizers', 1),
+    ('Main Courses', 'Our signature main dishes', 2),
+    ('Desserts', 'Sweet endings to your perfect meal', 3),
+    ('Beverages', 'Refreshing drinks and specialty beverages', 4);

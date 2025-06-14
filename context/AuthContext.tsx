@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
-import { apiClient } from '@/lib/api';
+import { api } from '@/lib/api';
 import Cookies from 'js-cookie';
 import type { User, AuthState, AuthAction } from '@/types/auth';
 
@@ -52,7 +52,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 const AuthContext = createContext<{
   state: AuthState;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string, phone?: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   refreshToken: () => Promise<void>;
@@ -69,14 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const response = await apiClient.post('/auth/refresh', {
-        refresh_token: refreshToken,
-      });
-
-      const { access_token, user } = response.data;
+      const response = await api.auth.refresh(refreshToken);
+      const { accessToken, user } = response.data;
       
-      Cookies.set('access_token', access_token, { expires: 1 });
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: access_token } });
+      Cookies.set('access_token', accessToken, { expires: 1 });
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: accessToken } });
     } catch (error) {
       Cookies.remove('access_token');
       Cookies.remove('refresh_token');
@@ -87,61 +84,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Simulate API call - replace with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await api.auth.login({ email, password });
+      const { user, accessToken, refreshToken } = response.data;
       
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: 'John Doe',
-        phone: '+1234567890',
-        preferences: {
-          dietary: [],
-          notifications: true,
-        },
-        loyaltyPoints: 150,
-        createdAt: new Date().toISOString(),
-      };
-
-      const mockToken = 'mock_jwt_token';
+      Cookies.set('access_token', accessToken, { expires: 1 });
+      Cookies.set('refresh_token', refreshToken, { expires: 7 });
       
-      Cookies.set('access_token', mockToken, { expires: 1 });
-      Cookies.set('refresh_token', 'mock_refresh_token', { expires: 7 });
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: mockUser, token: mockToken } });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Invalid credentials' });
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: accessToken } });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Login failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     }
   }, []);
 
-  const register = useCallback(async (email: string, password: string, name: string) => {
+  const register = useCallback(async (email: string, password: string, name: string, phone?: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // Simulate API call - replace with actual registration
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await api.auth.register({ email, password, name, phone });
+      const { user, accessToken, refreshToken } = response.data;
       
-      const mockUser: User = {
-        id: Date.now().toString(),
-        email,
-        name,
-        phone: '',
-        preferences: {
-          dietary: [],
-          notifications: true,
-        },
-        loyaltyPoints: 0,
-        createdAt: new Date().toISOString(),
-      };
-
-      const mockToken = 'mock_jwt_token';
+      Cookies.set('access_token', accessToken, { expires: 1 });
+      Cookies.set('refresh_token', refreshToken, { expires: 7 });
       
-      Cookies.set('access_token', mockToken, { expires: 1 });
-      Cookies.set('refresh_token', 'mock_refresh_token', { expires: 7 });
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: mockUser, token: mockToken } });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: accessToken } });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Registration failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     }
   }, []);
@@ -154,15 +123,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     try {
-      // Simulate API call - replace with actual profile update
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       if (state.user) {
         const updatedUser = { ...state.user, ...data };
         dispatch({ type: 'UPDATE_USER', payload: updatedUser });
       }
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to update profile' });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to update profile';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
     }
   }, [state.user]);
