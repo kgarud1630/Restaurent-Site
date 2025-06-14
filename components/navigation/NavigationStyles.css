@@ -1,0 +1,228 @@
+/* Enhanced Navigation Menu Styles with Performance Optimizations */
+
+/* Hardware acceleration and performance optimizations */
+.nav-menu {
+  contain: layout style paint;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Smooth hover transitions with hardware acceleration */
+.nav-item {
+  contain: layout;
+  will-change: transform, opacity, background-color;
+  transform: translateZ(0);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover,
+.nav-item:focus {
+  transform: translateZ(0) scale(1.05);
+}
+
+/* Mobile menu animations with GPU acceleration */
+.mobile-menu {
+  contain: strict;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-menu.open {
+  transform: translateZ(0) translateX(0);
+}
+
+.mobile-menu.closed {
+  transform: translateZ(0) translateX(100%);
+}
+
+/* Backdrop blur optimization */
+.nav-backdrop {
+  contain: strict;
+  will-change: backdrop-filter, opacity;
+  backdrop-filter: blur(12px);
+  transition: backdrop-filter 200ms ease-out,
+              opacity 200ms ease-out;
+}
+
+/* Focus indicators with high contrast */
+.nav-focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip navigation link */
+.skip-nav {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  z-index: 1000;
+  transition: top 200ms ease-out;
+}
+
+.skip-nav:focus {
+  top: 6px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-item {
+    border: 1px solid transparent;
+  }
+  
+  .nav-item:hover,
+  .nav-item:focus {
+    border-color: currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .mobile-menu,
+  .nav-backdrop {
+    transition: none;
+  }
+  
+  .nav-item:hover,
+  .nav-item:focus {
+    transform: none;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .nav-backdrop {
+    backdrop-filter: blur(12px) brightness(0.8);
+  }
+}
+
+/* Print styles */
+@media print {
+  .nav-menu {
+    display: none;
+  }
+}
+
+/* Container queries for responsive design */
+@container (max-width: 768px) {
+  .nav-desktop {
+    display: none;
+  }
+}
+
+@container (min-width: 769px) {
+  .nav-mobile {
+    display: none;
+  }
+}
+
+/* Performance optimizations for animations */
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--primary) / 0.1);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+.nav-item:hover::before,
+.nav-item:focus::before {
+  opacity: 1;
+}
+
+/* Badge animations */
+.cart-badge {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateZ(0) scale(1.05);
+  }
+}
+
+/* Loading states */
+.nav-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--primary) / 0.2),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+  will-change: transform;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Accessibility enhancements */
+.nav-item[aria-current="page"] {
+  position: relative;
+}
+
+.nav-item[aria-current="page"]::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: hsl(var(--primary));
+  border-radius: 50%;
+}
+
+/* Touch target optimization */
+@media (pointer: coarse) {
+  .nav-item {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Hover state optimizations for touch devices */
+@media (hover: none) {
+  .nav-item:hover {
+    transform: none;
+  }
+}
